@@ -10,14 +10,13 @@ CWD=$(cd "$(dirname "$0")"; pwd)
 NAND="/dev/nand"
 NANDA="/dev/nanda"
 NANDB="/dev/nandb"
-NANDC="/dev/nandc"
 
 BOOT="/mnt/nanda"
 ROOTFS="/mnt/nandb"
 
 BOOTLOADER="${CWD}/bootloader"
 
-NANDPART="${CWD}/sunxi-tools/nand-part2"
+NANDPART="nand-part2"
 
 EXCLUDE="${CWD}/exclude.txt"
 
@@ -55,17 +54,15 @@ done
 }
 
 formatNand () {
-$NANDPART $NAND 16 "boot 2048" "linux 4000000" "data 0"
+$NANDPART $NAND 16 "boot 2048" "linux 0"
 }
 
 mkFS(){
 mkfs.msdos $NANDA
-mkfs.ext4 $NANDB
-mkfs.ext4 $NANDC
+mkfs.ext4 -O ^has_journal $NANDB
 }
 
 mountDevice(){
-
 if [ ! -d $BOOT ];then
     mkdir $BOOT
 fi
@@ -96,9 +93,7 @@ patchRootfs(){
 cat > ${ROOTFS}/etc/fstab <<END
 #<file system>	<mount point>	<type>	<options>	<dump>	<pass>
 /dev/nandb	/		ext4	defaults	0	1
-/dev/nandc	/mnt/nandc	ext4	defaults	0	1
 END
-mkdir ${ROOTFS}/mnt/nandc
 }
 
 isRoot

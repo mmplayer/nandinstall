@@ -14,9 +14,10 @@ NANDB="/dev/nandb"
 BOOT="/mnt/nanda"
 ROOTFS="/mnt/nandb"
 
-BOOTLOADER="${CWD}/bootloader"
+CUBIAN_PART="${CWD}/cubian_nand.gz"
+CURRENT_PART="${CWD}/nand.tmp"
 
-NANDPART="nand-part2"
+BOOTLOADER="${CWD}/bootloader"
 
 EXCLUDE="${CWD}/exclude.txt"
 
@@ -53,8 +54,16 @@ for n in ${NAND}*;do
 done
 }
 
-formatNand () {
-$NANDPART $NAND 16 "boot 2048" "linux 0"
+formatNand(){
+gzip -cd $CUBIAN_PART | dd of=$NAND
+}
+
+nandPartitionOK(){
+dd if=/dev/nand of=$CURRENT_PART bs=1M count=1
+zdiff $CUBIAN_PART $CURRENT_PART
+partitionIdentical=$?
+rm $CURRENT_PART
+return $partitionIdentical
 }
 
 mkFS(){
@@ -99,28 +108,28 @@ END
 isRoot
 if promptyn "This will completely destory your data on $NAND, Are you sure to continue?"; then
     umountNand
-    formatNand
-    echo "please wait for a moment"
-    echo "waiting 20 seconds"
-    sleep 10
-    echo "waiting 10 seconds"
-    sleep 5
-    echo "waiting 5 seconds"
-    sleep 5
-    partprobe $NAND
-    mkFS
-    echo "waiting 5 seconds"
-    sleep 5
-    echo "mount NAND partitions"
-    mountDevice
-    echo "install bootloader"
-    installBootloader
-    echo "install rootfs"
-    installRootfs
-    patchRootfs
-    umountNand
-    echo "success! remember to remove your SD card then reboot"
-    if promptyn "shutdown now?";then
-        shutdown -h now
+    if nandPartitionOK;then
+        mkFS
+        echo "mount NAND partitions"
+        mountDevice
+        echo "install bootloader"
+        installBootloader
+        echo "install rootfs"
+        installRootfs
+        patchRootfs
+        umountNand
+        echo "success! remember to remove your SD card then reboot"
+        if promptyn "shutdown now?";then
+            shutdown -h now
+        fi
+    else
+        formatNand   
+        echo ""
+        echo "!!! Reboot is required for changes to take effect !!!"
+        echo ""
+        echo "Run this script again after the system is up"
+        if promptyn "reboot now?";then
+            shutdown -r now
+        fi
     fi
 fi

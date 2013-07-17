@@ -67,7 +67,7 @@ return $partitionIdentical
 }
 
 mkFS(){
-mkfs.msdos $NANDA
+mkfs.vfat $NANDA
 mkfs.ext4 -O ^has_journal $NANDB
 }
 
@@ -101,28 +101,29 @@ sync
 patchRootfs(){
 cat > ${ROOTFS}/etc/fstab <<END
 #<file system>	<mount point>	<type>	<options>	<dump>	<pass>
-/dev/nandb	/		ext4	defaults	0	1
+$NANDB	/		ext4	defaults	0	1
 END
 }
 
 isRoot
-if promptyn "This will completely destory your data on $NAND, Are you sure to continue?"; then
+if nandPartitionOK;then
+    echo "continue to install on NAND"   
+    mkFS
+    echo "mount NAND partitions"   
+    mountDevice
+    echo "install bootloader"
+    installBootloader
+    echo "install rootfs"
+    installRootfs
+    patchRootfs
     umountNand
-    if nandPartitionOK;then
-        mkFS
-        echo "mount NAND partitions"
-        mountDevice
-        echo "install bootloader"
-        installBootloader
-        echo "install rootfs"
-        installRootfs
-        patchRootfs
+    echo "success! remember to remove your SD card then reboot"
+    if promptyn "shutdown now?";then
+        shutdown -h now
+    fi
+else
+    if promptyn "This will completely destory your data on $NAND, Are you sure to continue?"; then
         umountNand
-        echo "success! remember to remove your SD card then reboot"
-        if promptyn "shutdown now?";then
-            shutdown -h now
-        fi
-    else
         formatNand   
         echo ""
         echo "!!! Reboot is required for changes to take effect !!!"

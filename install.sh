@@ -55,19 +55,24 @@ done
 }
 
 formatNand(){
-gzip -cd $CUBIAN_PART | dd of=$NAND
-echo -e 'ANDROID!\0\0\0\0\0\0\0\0\c' > /dev/nand2
+tar -xzOf $CUBIAN_PART | dd of=$NAND
 }
 
 nandPartitionOK(){
-dd if=/dev/nand of=$CURRENT_PART bs=1M count=1
-zdiff $CUBIAN_PART $CURRENT_PART
-partitionIdentical=$?
+dd if=/dev/nand of=$CURRENT_PART bs=1M count=1>/dev/null 2>&1
+md51=$(md5sum $CURRENT_PART | cut -c1-32)
+md52=$(tar -xzOf $CUBIAN_PART | md5sum | cut -c1-32)
 rm $CURRENT_PART
-return $partitionIdentical
+if [[ "$md51" = "$md52" ]]
+then
+return 0
+else
+return 1
+fi
 }
 
 mkFS(){
+echo -e 'ANDROID!\0\0\0\0\0\0\0\0\c' > /dev/nand2
 mkfs.vfat $NANDA
 mkfs.ext4 -O ^has_journal $NANDB
 }
@@ -85,17 +90,13 @@ mount $NANDB $ROOTFS
 }
 
 installBootloader(){
-cd $BOOT
-rm -rf *
+rm -rf $BOOT/*
 rsync -avc $BOOTLOADER/* $BOOT
-cp /boot/script.bin $ROOTFS/boot/
-cp /boot/uEnv.txt $ROOTFS/boot/
-cd $PWD
+rsync -avc /boot/script.bin /boot/uEnv.txt /boot/uImage $ROOTFS/boot/
 }
 
 installRootfs(){
 rsync -avc --exclude-from=$EXCLUDE / $ROOTFS
-cp /boot/uImage $ROOTFS/boot/
 echo "please wait"
 sync
 }
@@ -109,6 +110,7 @@ END
 
 isRoot
 if nandPartitionOK;then
+    umountNand
     echo "continue to install on NAND"
     mkFS
     echo "mount NAND partitions"

@@ -88,11 +88,14 @@ installBootloader(){
 cd $BOOT
 rm -rf *
 rsync -avc $BOOTLOADER/* $BOOT
+cp /boot/script.bin $ROOTFS/boot/
+cp /boot/uEnv.txt $ROOTFS/boot/
 cd $PWD
 }
 
 installRootfs(){
 rsync -avc --exclude-from=$EXCLUDE / $ROOTFS
+cp /boot/uImage $ROOTFS/boot/
 echo "please wait"
 sync
 }

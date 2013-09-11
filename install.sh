@@ -2,7 +2,7 @@
 #
 # Author: cubieplayer(cubieplayer@github.com)
 # Modify: maq(maq99@github.com)
-# Filename: cubian-install.sh
+# Filename: install.sh
 # Depends: partprobe
 # Description: This script can help transfer you system on 
 #  SD-card to NAND_DEVICE automatically. Supports the following
@@ -25,7 +25,6 @@ set -e
 
 PWD="'pwd'"
 CWD=$(cd "$(dirname "$0")"; pwd)
-#"/usr/lib/cubian-nandinstall"
 
 MMC_DEVICE="/dev/mmcblk0"
 NAND_DEVICE="/dev/nand"
@@ -201,7 +200,7 @@ fi
 set -e
 
 ### determine partition table
-CUBIAN_PART="${CWD}/${DEVICE_TYPE}/cubian_nand.gz"
+CUBIAN_PART="${CWD}/${DEVICE_TYPE}/cubie_nand.gz"
 
 ### determine u-boot.bin on a20
 # use 0f35 for kernel 3.3.0

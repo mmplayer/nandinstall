@@ -141,7 +141,8 @@ mount $NAND_ROOT_DEVICE $MNT_ROOT
 installBootloader(){
 rm -rf $MNT_BOOT/*
 rsync -avc $BOOTLOADER/* $MNT_BOOT
-rsync -avc /boot/script.bin /boot/uImage $MNT_ROOT/boot/
+rsync -avc /boot/* $MNT_ROOT/boot/
+#rsync -avc /boot/script.bin /boot/uImage $MNT_ROOT/boot/
 #/boot/uEnv.txt 
 }
 
@@ -234,26 +235,12 @@ elif [[ "$DEVICE_TYPE" = "${DEVICE_A20}" ]];then
 	fi
 fi
 
-if promptyn "Recreate partition tabel - This will completely destory your data on $NAND_DEVICE, [y] to continue [n] to skip this step"; then
+if promptyn "Recreate partition table - This will completely destory your data on $NAND_DEVICE, [y] to continue [n] to skip this step"; then
         umountNand
         formatNand   
         echo ""
        echoBlue "Reading new partition table.."
-   if partprobe $NAND_DEVICE ; then
-	echoRed "no partprobe or partprobe fail - Reboot is required for changes to take effect"
-	echo "" 
-	echoRed "Run this script again after reboot and skip partition creation"
-	if propmtyn "reboot now?"; then
-		shutdown -r now
-	fi
-   fi 
-fi
-if promptyn "Do you won't to LVM on yours rootfs?";then
-
-	pvcreate $NAND_ROOT_DEVICE
-	vgcreate $LVM_GROUP $NAND_ROOT_DEVICE
-	lvcreate -l100%FREE -n $LVM_NAME $LVM_GROUP
-	NAND_ROOT_DEVICE=/dev/$LVM_GROUP/$LVM_NAME
+   partprobe $NAND_DEVICE
 fi
 if promptyn "Create file system, [y] to continue [n] to skip this step"; then
    echoBlue "Creating file system.."   

@@ -1,0 +1,6 @@
+This script was made by drkbcn from http://www.cubieforums.com/ for Cubieez image.
+It base on http://elinux.org/RPi_raspi-config 
+I added to cubie_config possibility to instal into Nand (Base on mmplayer/nandinstall script)
+It should work on any image runs from SD card (berryboot can be problem).
+Make sure that you have installed partprobe and proper script.bin & uImage ant /boot 
+(should be Any.. Cubian and Cubieez was tested if not work at your distro please give me notice)
